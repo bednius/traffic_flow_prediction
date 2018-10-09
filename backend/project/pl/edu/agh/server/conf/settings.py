@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'pl.edu.agh.server.tfp',
+    'django_cron',
+
 ]
 
 MIDDLEWARE = [
@@ -49,7 +52,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'conf.urls'
+CRON_CLASSES = [
+    'pl.edu.agh.server.tfp.task.MyCronJob',
+]
+
+ROOT_URLCONF = 'pl.edu.agh.server.conf.urls'
 
 TEMPLATES_PATH = 'tfp/resources/templates/'
 TEMPLATES = [
@@ -112,7 +119,8 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+# USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
