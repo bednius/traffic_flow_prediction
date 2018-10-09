@@ -35,6 +35,9 @@ class DownloadTask(object):
     def make_request(self, url):
         return requests.get(url)
 
+    def _get_int_value(self, string):
+        return int(string) if string else 0
+
     def save_data(self, id, json):
         global actualFile
         rows = json["Rows"]
@@ -50,9 +53,12 @@ class DownloadTask(object):
             sys.stderr.write('No data for sensor {}'.format(id))
 
         for row in rows:
+            avg_mph = self._get_int_value(row["Avg mph"])
+            total_volume = self._get_int_value(row["Total Volume"])
+            status = Measurement.SUCCESSFUL if total_volume > 0 else Measurement.NO_DATA
+
             measurement = Measurement(sensor_object=sensor, datetime=row["Report Date"].replace('00:00:00', row["Time Period Ending"]),
-                                      avg_mph=row["Avg mph"], total_volume=row["Total Volume"],
-                                      status=Measurement.SUCCESSFUL)
+                                      avg_mph=avg_mph, total_volume=total_volume, status=status)
             measurement.save()
 
     def iterate_over_links(self, id, json_links):
