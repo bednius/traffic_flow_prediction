@@ -3,6 +3,12 @@ from django.db import models
 
 class Sensor(models.Model):
     name = models.CharField(max_length=30)
+    longitude = models.DecimalField(max_digits=18, decimal_places=15)
+    latitude = models.DecimalField(max_digits=18, decimal_places=15)
+
+
+    class Meta:
+        db_table = 'sensor'
 
 
 class Measurement(models.Model):
@@ -29,6 +35,8 @@ class Measurement(models.Model):
             models.Index(fields=['datetime'], name='datetime_idx'),
         ]
         unique_together = (('datetime', 'sensor_object'),)
+        db_table = 'measurement'
+
 
 
 class Prediction(models.Model):
@@ -46,3 +54,4 @@ class Prediction(models.Model):
             models.Index(fields=['datetime'], name='datetime_idx'),
         ]
         unique_together = (('datetime', 'sensor_object'),)
+        db_table = 'prediction'

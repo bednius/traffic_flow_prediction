@@ -93,22 +93,22 @@ class DownloadTask(object):
                 sys.stderr.write(traceback.format_exc())
 
 
-class MyCronJob(CronJobBase):
-    ALLOW_PARALLEL_RUNS = True
-    RUN_EVERY_MINS = 3600  # every 60 hours
+# class MyCronJob(CronJobBase):
+#     ALLOW_PARALLEL_RUNS = True
+#     RUN_EVERY_MINS = 3600  # every 60 hours
+#
+#     schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+#     code = 'my_app.my_cron_job'  # a unique code
+#     DownloadTask().main()
+#
+#     def do(self):
+#         DownloadTask().main()
 
-    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
-    code = 'my_app.my_cron_job'  # a unique code
-    DownloadTask().main()
 
-    def do(self):
-        DownloadTask().main()
-
-
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
     #TODO configure to run DownloadTask as standalone script
-    DownloadTask.main()
+    # DownloadTask.main()
 
 # @periodic_task(run_every=crontab(hour=7, minute=30, day_of_week="mon"))
 # def every_monday_morning():
