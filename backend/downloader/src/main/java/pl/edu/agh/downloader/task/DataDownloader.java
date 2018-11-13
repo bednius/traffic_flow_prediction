@@ -15,9 +15,7 @@ import pl.edu.agh.downloader.domain.db.entity.Measurement;
 import pl.edu.agh.downloader.domain.db.entity.Sensor;
 import pl.edu.agh.downloader.domain.db.repository.MeasurementRepository;
 import pl.edu.agh.downloader.domain.db.repository.SensorRepository;
-import pl.edu.agh.downloader.domain.net.ApiResponse;
-import pl.edu.agh.downloader.domain.net.Link;
-import pl.edu.agh.downloader.domain.net.RowMeasurement;
+import pl.edu.agh.downloader.domain.net.*;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
@@ -33,7 +31,9 @@ import java.util.Optional;
 @Component
 public class DataDownloader {
 
-    private static final String DATA_SERVER_ADDRESS = "http://webtris.highwaysengland.co.uk/api/v1/reports/01012015/to/31122015/daily?sites=%s&page=1&page_size=2000";
+    private static final String DATA_SERVER_ADDRESS = "http://webtris.highwaysengland.co.uk/api/v1/reports/22032016/to/23032016/daily?sites=%s&page=1&page_size=2000";
+    private static final String SENSORS_SERVER_ADDRESS = "http://webtris.highwaysengland.co.uk/api/v1/sites";
+
 
     private final MultiThreadedHttpConnectionManager httpConnectionManager;
     private final ObjectMapper objectMapper;
@@ -102,6 +102,74 @@ public class DataDownloader {
 
     }
 
+    @Async
+    public void downloadSensors(int firstSensorId, int lastSensorId) {
+        log.info(String.format("*Init task -  downloading SENSORS for range: <%d, %d)  .", firstSensorId, lastSensorId));
+
+        HttpClient client = new HttpClient(httpConnectionManager);
+        String res;
+        GetMethod get = new GetMethod((SENSORS_SERVER_ADDRESS));
+            try {
+
+
+                SiteDetailsResponse siteDetailResponse;
+                String nextAddress;
+                    int statusCode = client.executeMethod(get);
+                    if (statusCode != HttpStatus.SC_OK) {
+                        log.error("Method failed: " + get.getStatusLine() +   "with status: " + statusCode);
+
+                    } else {
+                        res = get.getResponseBodyAsString();
+                        siteDetailResponse = objectMapper.readValue(res, SiteDetailsResponse.class);
+//                        log.info(siteDetailResponse.toString());
+                        persistObjectToDb(siteDetailResponse);
+                    }
+
+
+
+            } catch (HttpException e) {
+                log.error("Fatal protocol violation: " + e.getMessage());
+                e.printStackTrace();
+            } catch (IOException e) {
+                log.error(e.getMessage());
+                e.printStackTrace();
+            } finally {
+                get.releaseConnection();
+
+            }
+
+        log.info(String.format("*Finished downloading data for range : <%d, %d)", firstSensorId, lastSensorId));
+
+    }
+
+
+
+    private void persistObjectToDb(SiteDetailsResponse siteDetailResponse) {
+        Optional<Sensor> sensorOpt;
+        Sensor sensor;
+        for (SiteDetails sensorDetails: siteDetailResponse.getSites()) {
+            Long id = Long.valueOf(sensorDetails.getId());
+            sensorOpt = sensorRepository.findById(id);
+
+            if (!sensorOpt.isPresent()) {
+                sensor = Sensor.builder()
+                        .id(id)
+                        .name(sensorDetails.getName())
+                        .latitude(sensorDetails.getLatitude())
+                        .longitude(sensorDetails.getLongitude())
+                        .build();
+                sensorRepository.save(sensor);
+            } else {
+                sensor = sensorOpt.get();
+                sensor.setLatitude(sensorDetails.getLatitude());
+                sensor.setLongitude(sensorDetails.getLongitude());
+                sensorRepository.save(sensor);
+
+            }
+        }
+
+    }
+
     private String getNextAddress(ApiResponse apiResponse) {
         for (Link link : apiResponse.getHeader().getLinks()) {
             if (link.getRel().equals("nextPage")) {
@@ -133,12 +201,31 @@ public class DataDownloader {
             Measurement measurement = Measurement.builder()
                     .avgMph(row.getAvgMph())
                     .dateTime(LocalDateTime.of(LocalDateTime.parse(row.getMeasurementDate(), dateTimeFormatter).toLocalDate(), LocalTime.parse(row.getTimeOfMeasurement(), timeFormatter)))
-                    .status(row.getAvgMph() != null && row.getAvgMph() > 0 ? "SUCCESSFUL" : "NO_DATA")
+                    .status(getDataConsistencyStatus(row))
                     .sensor(sensor)
                     .totalVolume(row.getTotalVolume())
+
                     .build();
             measurements.add(measurement);
         }
         measurementRepository.saveAll(measurements);
+    }
+
+    private String getDataConsistencyStatus(RowMeasurement row ){
+        if(row.getTotalVolume() == null || row.getTotalVolume() < 0) {
+            if (row.getAvgMph() == null || row.getAvgMph() < 0) {
+                return "NO_DATA";
+            }
+            else {
+                return "ONLY_MPH";
+            }
+        }else {
+            if (row.getAvgMph() == null || row.getAvgMph() < 0) {
+                return "NO_DATA";
+            } else {
+                return "SUCCESSFUL";
+            }
+        }
+
     }
 }

@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
 @DynamicUpdate
 @DynamicInsert
 @Entity
+@Table(indexes = {
+        @Index(name = "measurement_sensor_object_index", columnList = "sensor_object_id", unique = false),
+        @Index(name = "measurement_datetime_index", columnList = "datetime", unique = false)})
 public class Measurement {
 
     @Id

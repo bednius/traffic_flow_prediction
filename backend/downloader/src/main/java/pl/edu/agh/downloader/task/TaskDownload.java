@@ -18,8 +18,10 @@ public class TaskDownload implements CommandLineRunner{
 
     @Override
     public void run(String... args) throws Exception {
-        int firstSensorId=1,  lastSensorId=18000;
-        int threadCount = 3;
+        int firstSensorId=0,  lastSensorId=20000;
+        dataDownloader.downloadSensors(firstSensorId, lastSensorId);
+
+        int threadCount = 5;
         int range = (lastSensorId - firstSensorId) / threadCount;
         int first,last = lastSensorId;
 

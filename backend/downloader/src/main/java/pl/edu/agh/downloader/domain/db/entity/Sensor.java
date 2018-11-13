@@ -1,6 +1,5 @@
 package pl.edu.agh.downloader.domain.db.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,4 +23,8 @@ public class Sensor {
     private Long id;
 
     private String name;
+
+    private Double longitude;
+
+    private Double latitude;
 }
