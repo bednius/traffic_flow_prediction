@@ -44,9 +44,10 @@ def trigger(request):
 
 def results(request, result_id):
     template = loader.get_template(CHART)
-    data = PREDICTIONS.get(result_id)
+    result_query = Measurement.objects.filter(sensor_object_id=result_id)
     print(result_id)
-    print(data)
+    print(result_query)
+    data = {entry.datetime.strftime("%Y-%m-%d %H:%M:%S") : entry.total_volume if entry.total_volume is not None else 0 for entry in result_query}
     variables = {
         'data': data
     }
