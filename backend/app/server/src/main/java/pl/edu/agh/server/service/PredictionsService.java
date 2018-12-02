@@ -4,7 +4,6 @@ import com.google.common.cache.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import pl.edu.agh.domain.db.entity.Measurement;
 import pl.edu.agh.domain.db.entity.Sensor;
 import pl.edu.agh.domain.db.repository.MeasurementRepository;
@@ -66,12 +65,28 @@ public class PredictionsService implements PredictionsProvider<SensorDTO, ChartD
 
     @Override
     public List<ChartData> getPredictionsBySensorId(Long id) {
-        List<Measurement> allBySensorId = measurementRepository.findAllBySensorId(id);
+        LocalDateTime dateTime = LocalDateTime.of(2015,11,22,0,0,0);
+        LocalDateTime finishDateTime = LocalDateTime.of(2015,12,1,0,0,0);
+
+        List<Measurement> allBySensorId = measurementRepository.findAllBySensorIdByDateTimeAfer(id, dateTime, finishDateTime);
+        allBySensorId.parallelStream()
+                .forEach(m -> m.setDateTime(m.getDateTime().withYear(2018)));
 
         Map<LocalDateTime, Integer> values =  allBySensorId.size() > 0 ?
-                allBySensorId.stream().collect(Collectors.toMap(m -> m.getDateTime(), m -> m.getTotalVolume()!= null ? m.getTotalVolume(): 0, (x1,x2) -> x1)):
+                allBySensorId.parallelStream()
+                        .collect(Collectors.toMap(m -> m.getDateTime(), m -> m.getTotalVolume()!= null ? m.getTotalVolume(): 0, (x1,x2) -> x1)):
                 Collections.emptyMap();
-        return Stream.of(ChartData.builder().name("volume").values(values).build()).collect(Collectors.toList());
+
+        Map<LocalDateTime, Integer> velocity =  allBySensorId.size() > 0 ?
+                allBySensorId.parallelStream()
+                        .collect(Collectors.toMap(m -> m.getDateTime(), m -> m.getAvgMph()!= null ? m.getAvgMph(): 0, (x1,x2) -> x1)):
+                Collections.emptyMap();
+
+
+        ChartData volume = ChartData.builder().name("volume").values(values).build();
+        ChartData velocityChart = ChartData.builder().name("mph").values(velocity).build();
+
+        return Arrays.asList(volume, velocityChart);
     }
 
     @Override
@@ -87,6 +102,8 @@ public class PredictionsService implements PredictionsProvider<SensorDTO, ChartD
     @Override
     public List<SensorDTO> getAllSensor() {
         Collection<SensorDTO> values = sensors.asMap().values();
-        return new ArrayList<>(values);
+        List<SensorDTO> sensorDTOS = new ArrayList<>(values);
+
+        return sensorDTOS.subList(555,4000);
     }
 }
