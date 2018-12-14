@@ -35,9 +35,11 @@ public class Prediction {
     @Column(name = "total_volume")
     private Integer totalVolume;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "prediction_type")
-    private PredictionType predictionType;
+    @Column(name = "max_historical_volume")
+    private Integer maxVolume;
+
+    @Column(name = "min_historical_volume")
+    private Integer minVolume;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sensor_object_id")
