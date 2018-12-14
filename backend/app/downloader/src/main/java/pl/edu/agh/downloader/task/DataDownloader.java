@@ -8,15 +8,20 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import pl.edu.agh.domain.db.entity.DownloadStatus;
 import pl.edu.agh.domain.db.entity.Measurement;
 import pl.edu.agh.domain.db.entity.Sensor;
 import pl.edu.agh.domain.db.repository.MeasurementRepository;
 import pl.edu.agh.domain.db.repository.SensorRepository;
 import pl.edu.agh.domain.net.download.*;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -28,9 +33,15 @@ import java.util.Optional;
 @Component
 public class DataDownloader {
 
-    private static final String DATA_SERVER_ADDRESS = "http://webtris.highwaysengland.co.uk/api/v1/reports/22032016/to/23032016/daily?sites=%s&page=1&page_size=2000";
     private static final String SENSORS_SERVER_ADDRESS = "http://webtris.highwaysengland.co.uk/api/v1/sites";
 
+    private static String dataServerAddress = "http://webtris.highwaysengland.co.uk/api/v1/reports/%s/to/%s/daily?sites=%s&page=1&page_size=2000";
+
+    @Value("#{T(java.time.LocalDate).parse('${pl.edu.agh.measurementStartDate}')}")
+    private LocalDate rangeStartDate;
+
+    @Value("#{T(java.time.LocalDate).parse('${pl.edu.agh.measurementFinishDate}')}")
+    private LocalDate rangeFinishDate;
 
     private final MultiThreadedHttpConnectionManager httpConnectionManager;
     private final ObjectMapper objectMapper;
@@ -48,6 +59,20 @@ public class DataDownloader {
         this.measurementRepository = measurementRepository;
     }
 
+    @PostConstruct
+    public void initDataServerAddressWithDateRange(){
+        if(rangeStartDate == null){
+            throw new IllegalArgumentException("Property pl.edu.agh.measurementStartDate cannot be null");
+        }
+        if(rangeFinishDate== null){
+            throw new IllegalArgumentException("Property pl.edu.agh.measurementStartDate cannot be null");
+        }
+        if (rangeStartDate.isAfter(rangeFinishDate)){
+            throw new IllegalArgumentException("Start date cannot be after first date");
+        }
+        DateTimeFormatter urlPatten = DateTimeFormatter.ofPattern("ddMMyyyy");
+        dataServerAddress = String.format(dataServerAddress, rangeStartDate.format(urlPatten), rangeFinishDate.format(urlPatten), "%s");
+    }
 
     @Async
     public void download(int firstSensorId, int lastSensorId) {
@@ -55,11 +80,11 @@ public class DataDownloader {
 
         HttpClient client = new HttpClient(httpConnectionManager);
         String res;
-        GetMethod get = new GetMethod(String.format(DATA_SERVER_ADDRESS, String.valueOf(1)));
+        GetMethod get = new GetMethod(String.format(dataServerAddress, String.valueOf(1)));
         for (int id = firstSensorId; id < lastSensorId; id++) {
             try {
 
-                get = new GetMethod(String.format(DATA_SERVER_ADDRESS, String.valueOf(id)));
+                get = new GetMethod(String.format(dataServerAddress, String.valueOf(id)));
 
                 ApiResponse apiResponse;
                 String nextAddress;
@@ -67,7 +92,7 @@ public class DataDownloader {
                 do {
                     int statusCode = client.executeMethod(get);
                     if (statusCode != HttpStatus.SC_OK) {
-                        log.error("Method failed: " + get.getStatusLine() + "for sensor_id: " + String.valueOf(id) + "with status: " + statusCode);
+                        log.warn("Method failed: " + get.getStatusLine() + "for sensor_id: " + String.valueOf(id) + "with status: " + statusCode);
                         break;
 
                     } else {
@@ -86,10 +111,11 @@ public class DataDownloader {
             } catch (HttpException e) {
                 log.error("Fatal protocol violation: " + e.getMessage());
                 e.printStackTrace();
-            } catch (IOException e) {
+            } catch (IOException | DataIntegrityViolationException e) {
                 log.error(e.getMessage());
                 e.printStackTrace();
-            } finally {
+            }
+            finally {
                 get.releaseConnection();
 
             }
@@ -110,7 +136,6 @@ public class DataDownloader {
 
 
                 SiteDetailsResponse siteDetailResponse;
-                String nextAddress;
                     int statusCode = client.executeMethod(get);
                     if (statusCode != HttpStatus.SC_OK) {
                         log.error("Method failed: " + get.getStatusLine() +   "with status: " + statusCode);
@@ -118,7 +143,6 @@ public class DataDownloader {
                     } else {
                         res = get.getResponseBodyAsString();
                         siteDetailResponse = objectMapper.readValue(res, SiteDetailsResponse.class);
-//                        log.info(siteDetailResponse.toString());
                         persistObjectToDb(siteDetailResponse);
                     }
 
@@ -201,26 +225,25 @@ public class DataDownloader {
                     .status(getDataConsistencyStatus(row))
                     .sensor(sensor)
                     .totalVolume(row.getTotalVolume())
-
                     .build();
             measurements.add(measurement);
         }
         measurementRepository.saveAll(measurements);
     }
 
-    private String getDataConsistencyStatus(RowMeasurement row ){
+    private DownloadStatus getDataConsistencyStatus(RowMeasurement row ){
         if(row.getTotalVolume() == null || row.getTotalVolume() < 0) {
             if (row.getAvgMph() == null || row.getAvgMph() < 0) {
-                return "NO_DATA";
+                return DownloadStatus.NO_DATA;
             }
             else {
-                return "ONLY_MPH";
+                return DownloadStatus.ONLY_MPH;
             }
         }else {
             if (row.getAvgMph() == null || row.getAvgMph() < 0) {
-                return "NO_DATA";
+                return DownloadStatus.ONLY_VOLUME;
             } else {
-                return "SUCCESSFUL";
+                return DownloadStatus.SUCCESSFUL;
             }
         }
 
