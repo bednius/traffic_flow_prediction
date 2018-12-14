@@ -1,4 +1,4 @@
-package pl.edu.agh.downloader;
+package pl.edu.agh;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
@@ -15,7 +15,6 @@ import java.util.concurrent.Executor;
 @EnableAsync
 @Slf4j
 public class Application {
-
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
