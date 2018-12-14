@@ -18,7 +18,6 @@ public class HttpClientConectionManager {
     @Bean
     public HttpConnectionManagerParams httpConnectionManagerParams() {
         HttpConnectionManagerParams httpConnectionManagerParams = new HttpConnectionManagerParams();
-//        httpConnectionManagerParams.setDefaultMaxConnectionsPerHost(1000);
         return httpConnectionManagerParams;
     }
 }
