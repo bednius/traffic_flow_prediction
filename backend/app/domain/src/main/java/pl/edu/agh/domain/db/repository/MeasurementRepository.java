@@ -11,9 +11,6 @@ import java.util.List;
 @Repository
 public interface MeasurementRepository extends JpaRepository<Measurement, Long> {
 
-//    @Query("from Review r inner join fetch r.comments where r.reviewId = :id")
-//    User findByReviewId(@Param("id") int id);
-
     @Query(value = "SELECT * FROM MEASUREMENT WHERE sensor_object_id = ?1", nativeQuery = true)
     List<Measurement> findAllBySensorId(Long id);
 
