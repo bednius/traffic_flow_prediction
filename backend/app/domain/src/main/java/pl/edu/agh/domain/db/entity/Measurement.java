@@ -19,7 +19,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(indexes = {
         @Index(name = "measurement_sensor_object_index", columnList = "sensor_object_id", unique = false),
-        @Index(name = "measurement_datetime_index", columnList = "datetime", unique = false)})
+        @Index(name = "measurement_datetime_index", columnList = "datetime", unique = false),
+        @Index(name = "measurement_sensor_object_datetime_unique_index", columnList = "sensor_object_id,datetime", unique = true)})
+
 public class Measurement {
 
     @Id
@@ -35,7 +37,8 @@ public class Measurement {
     @Column(name = "total_volume")
     private Integer totalVolume;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private DownloadStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sensor_object_id")
