@@ -125,7 +125,7 @@ public class DataDownloader {
 
     }
 
-    @Async
+
     public void downloadSensors(int firstSensorId, int lastSensorId) {
         log.info(String.format("*Init task -  downloading SENSORS for range: <%d, %d)  .", firstSensorId, lastSensorId));
 
