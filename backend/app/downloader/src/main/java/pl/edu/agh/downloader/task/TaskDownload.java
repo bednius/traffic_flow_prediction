@@ -58,8 +58,17 @@ public class TaskDownload implements CommandLineRunner{
         if(lastSensorId== null){
             throw new IllegalArgumentException("Property pl.edu.agh.lastSensorId cannot be null");
         }
+
+        if(threadCount == null){
+            throw new IllegalArgumentException("Property pl.edu.agh.lastSensorId cannot be null");
+        }
+
+        if(threadCount < 1 ){
+            throw new IllegalArgumentException("Property pl.edu.agh.lastSensorId cannot be smaller than 1");
+        }
+
         if (firstSensorId > lastSensorId){
-            throw new IllegalArgumentException("First sensor id cannot be greater than last sensor id");
+            throw new IllegalArgumentException(String.format("First sensor id: %s cannot be greater than last sensor id: %s", firstSensorId, lastSensorId));
         }
     }
 }
