@@ -61,6 +61,7 @@ public class DataDownloader {
 
     @PostConstruct
     public void initDataServerAddressWithDateRange() {
+        log.info(String.format("Loaded range of date: [%s, %s]", rangeStartDate.toString(), rangeFinishDate.toString()));
         if (rangeStartDate == null) {
             throw new IllegalArgumentException("Property pl.edu.agh.measurementStartDate cannot be null");
         }
@@ -68,7 +69,7 @@ public class DataDownloader {
             throw new IllegalArgumentException("Property pl.edu.agh.measurementStartDate cannot be null");
         }
         if (rangeStartDate.isAfter(rangeFinishDate)) {
-            throw new IllegalArgumentException("Start date cannot be after first date");
+            throw new IllegalArgumentException(String.format("Start date: %s cannot be after last date: %s", rangeStartDate.toString(), rangeFinishDate.toString()));
         }
         DateTimeFormatter urlPatten = DateTimeFormatter.ofPattern("ddMMyyyy");
         dataServerAddress = String.format(dataServerAddress, rangeStartDate.format(urlPatten), rangeFinishDate.format(urlPatten), "%s");
@@ -98,7 +99,7 @@ public class DataDownloader {
                     } else {
                         res = get.getResponseBodyAsString();
                         apiResponse = objectMapper.readValue(res, ApiResponse.class);
-                        log.info(apiResponse.toString());
+                        log.debug(apiResponse.toString());
                         persistObjectToDb(apiResponse, id);
                     }
                     nextAddress = getNextAddress(apiResponse);
