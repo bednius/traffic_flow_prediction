@@ -219,14 +219,16 @@ public class DataDownloader {
 
         List<Measurement> measurements = new ArrayList<>(apiResponse.getRows().size());
         for (RowMeasurement row : apiResponse.getRows()) {
-            Measurement measurement = Measurement.builder()
-                    .avgMph(row.getAvgMph())
-                    .dateTime(LocalDateTime.of(LocalDateTime.parse(row.getMeasurementDate(), dateTimeFormatter).toLocalDate(), LocalTime.parse(row.getTimeOfMeasurement(), timeFormatter)))
-                    .status(getDataConsistencyStatus(row))
-                    .sensor(sensor)
-                    .totalVolume(row.getTotalVolume())
-                    .build();
-            measurements.add(measurement);
+            if (getDataConsistencyStatus(row) == DownloadStatus.SUCCESSFUL) {
+                Measurement measurement = Measurement.builder()
+                        .avgMph(row.getAvgMph())
+                        .dateTime(LocalDateTime.of(LocalDateTime.parse(row.getMeasurementDate(), dateTimeFormatter).toLocalDate(), LocalTime.parse(row.getTimeOfMeasurement(), timeFormatter)))
+                        .status(DownloadStatus.SUCCESSFUL)
+                        .sensor(sensor)
+                        .totalVolume(row.getTotalVolume())
+                        .build();
+                measurements.add(measurement);
+            }
         }
         measurementRepository.saveAll(measurements);
     }

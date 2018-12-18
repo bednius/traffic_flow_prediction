@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataSource name="tfpv2@localhost">
+  <database-model serializer="dbm" rdbms="POSTGRES" format-version="4.7">
+    <root id="1"/>
+    <database id="2" parent="1" name="tfpv2">
+      <ObjectId>16403</ObjectId>
+      <Current>1</Current>
+      <Visible>1</Visible>
+    </database>
+    <database id="3" parent="1" name="postgres">
+      <ObjectId>12413</ObjectId>
+    </database>
+    <database id="4" parent="1" name="tfp">
+      <ObjectId>16384</ObjectId>
+    </database>
+    <role id="5" parent="1" name="postgres">
+      <ObjectId>10</ObjectId>
+      <SuperRole>1</SuperRole>
+      <Inherit>1</Inherit>
+      <CreateRole>1</CreateRole>
+      <CreateDb>1</CreateDb>
+      <CanLogin>1</CanLogin>
+      <Replication>1</Replication>
+      <ConnectionLimit>-1</ConnectionLimit>
+      <BypassRls>1</BypassRls>
+    </role>
+    <role id="6" parent="1" name="tfp">
+      <ObjectId>16385</ObjectId>
+      <Inherit>1</Inherit>
+      <CanLogin>1</CanLogin>
+      <ConnectionLimit>-1</ConnectionLimit>
+      <ValidUntil>infinity</ValidUntil>
+    </role>
+    <schema id="7" parent="2" name="public">
+      <ObjectId>16496</ObjectId>
+      <IntrospectionTimestamp>2018-12-15.15:12:11.408</IntrospectionTimestamp>
+      <IntrospectionStateNumber>15641</IntrospectionStateNumber>
+      <Current>1</Current>
+      <Visible>1</Visible>
+    </schema>
+    <schema id="8" parent="2" name="pg_catalog">
+      <ObjectId>11</ObjectId>
+    </schema>
+    <schema id="9" parent="2" name="pg_toast">
+      <ObjectId>99</ObjectId>
+    </schema>
+    <schema id="10" parent="2" name="pg_temp_1">
+      <ObjectId>11816</ObjectId>
+    </schema>
+    <schema id="11" parent="2" name="pg_toast_temp_1">
+      <ObjectId>11817</ObjectId>
+    </schema>
+    <schema id="12" parent="2" name="information_schema">
+      <ObjectId>12121</ObjectId>
+    </schema>
+    <sequence id="13" parent="7" name="hibernate_sequence">
+      <ObjectId>16516</ObjectId>
+      <StateNumber>15639</StateNumber>
+      <SequenceIdentity>1</SequenceIdentity>
+      <CacheSize>1</CacheSize>
+    </sequence>
+    <table id="14" parent="7" name="measurement">
+      <ObjectId>16497</ObjectId>
+      <StateNumber>15640</StateNumber>
+    </table>
+    <table id="15" parent="7" name="prediction">
+      <ObjectId>16502</ObjectId>
+      <StateNumber>15641</StateNumber>
+    </table>
+    <table id="16" parent="7" name="sensor">
+      <ObjectId>16507</ObjectId>
+      <StateNumber>15641</StateNumber>
+    </table>
+    <column id="17" parent="14" name="id">
+      <Position>1</Position>
+      <DataType>bigint|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>15632</StateNumber>
+      <TypeId>20</TypeId>
+    </column>
+    <column id="18" parent="14" name="avg_mph">
+      <Position>2</Position>
+      <DataType>integer|0s</DataType>
+      <StateNumber>15632</StateNumber>
+      <TypeId>23</TypeId>
+    </column>
+    <column id="19" parent="14" name="datetime">
+      <Position>3</Position>
+      <DataType>timestamp|0s</DataType>
+      <StateNumber>15632</StateNumber>
+      <TypeId>1114</TypeId>
+    </column>
+    <column id="20" parent="14" name="status">
+      <Position>4</Position>
+      <DataType>varchar(255)|0s</DataType>
+      <StateNumber>15632</StateNumber>
+      <TypeId>1043</TypeId>
+    </column>
+    <column id="21" parent="14" name="total_volume">
+      <Position>5</Position>
+      <DataType>integer|0s</DataType>
+      <StateNumber>15632</StateNumber>
+      <TypeId>23</TypeId>
+    </column>
+    <column id="22" parent="14" name="sensor_object_id">
+      <Position>6</Position>
+      <DataType>bigint|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>15632</StateNumber>
+      <TypeId>20</TypeId>
+    </column>
+    <index id="23" parent="14" name="measurement_pkey">
+      <ObjectId>16500</ObjectId>
+      <ColNames>id</ColNames>
+      <Unique>1</Unique>
+    </index>
+    <index id="24" parent="14" name="measurement_datetime_index">
+      <ObjectId>16513</ObjectId>
+      <ColNames>datetime</ColNames>
+    </index>
+    <index id="25" parent="14" name="measurement_sensor_object_index">
+      <ObjectId>16512</ObjectId>
+      <ColNames>sensor_object_id</ColNames>
+    </index>
+    <key id="26" parent="14" name="measurement_pkey">
+      <ObjectId>16501</ObjectId>
+      <ColNames>id</ColNames>
+      <UnderlyingIndexName>measurement_pkey</UnderlyingIndexName>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="27" parent="14" name="fkh18wfhyereaycllcdqlt9y9m5">
+      <ObjectId>16518</ObjectId>
+      <ColNames>sensor_object_id</ColNames>
+      <RefTableId>16507</RefTableId>
+      <RefColPositions>1</RefColPositions>
+      <RefTableName>sensor</RefTableName>
+      <RefKeyName>sensor_pkey</RefKeyName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="28" parent="15" name="id">
+      <Position>1</Position>
+      <DataType>bigint|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>15633</StateNumber>
+      <TypeId>20</TypeId>
+    </column>
+    <column id="29" parent="15" name="avg_mph">
+      <Position>2</Position>
+      <DataType>integer|0s</DataType>
+      <StateNumber>15633</StateNumber>
+      <TypeId>23</TypeId>
+    </column>
+    <column id="30" parent="15" name="datetime">
+      <Position>3</Position>
+      <DataType>timestamp|0s</DataType>
+      <StateNumber>15633</StateNumber>
+      <TypeId>1114</TypeId>
+    </column>
+    <column id="31" parent="15" name="max_historical_volume">
+      <Position>4</Position>
+      <DataType>integer|0s</DataType>
+      <StateNumber>15633</StateNumber>
+      <TypeId>23</TypeId>
+    </column>
+    <column id="32" parent="15" name="min_historical_volume">
+      <Position>5</Position>
+      <DataType>integer|0s</DataType>
+      <StateNumber>15633</StateNumber>
+      <TypeId>23</TypeId>
+    </column>
+    <column id="33" parent="15" name="total_volume">
+      <Position>6</Position>
+      <DataType>integer|0s</DataType>
+      <StateNumber>15633</StateNumber>
+      <TypeId>23</TypeId>
+    </column>
+    <column id="34" parent="15" name="sensor_object_id">
+      <Position>7</Position>
+      <DataType>bigint|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>15633</StateNumber>
+      <TypeId>20</TypeId>
+    </column>
+    <index id="35" parent="15" name="prediction_pkey">
+      <ObjectId>16505</ObjectId>
+      <ColNames>id</ColNames>
+      <Unique>1</Unique>
+    </index>
+    <index id="36" parent="15" name="prediction_datetime_index">
+      <ObjectId>16515</ObjectId>
+      <ColNames>datetime</ColNames>
+    </index>
+    <index id="37" parent="15" name="prediction_sensor_object_index">
+      <ObjectId>16514</ObjectId>
+      <ColNames>sensor_object_id</ColNames>
+    </index>
+    <key id="38" parent="15" name="prediction_pkey">
+      <ObjectId>16506</ObjectId>
+      <ColNames>id</ColNames>
+      <UnderlyingIndexName>prediction_pkey</UnderlyingIndexName>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="39" parent="15" name="fkfpdwney0csp2awhtuxmxbmwh0">
+      <ObjectId>16523</ObjectId>
+      <ColNames>sensor_object_id</ColNames>
+      <RefTableId>16507</RefTableId>
+      <RefColPositions>1</RefColPositions>
+      <RefTableName>sensor</RefTableName>
+      <RefKeyName>sensor_pkey</RefKeyName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="40" parent="16" name="id">
+      <Position>1</Position>
+      <DataType>bigint|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>15634</StateNumber>
+      <TypeId>20</TypeId>
+    </column>
+    <column id="41" parent="16" name="latitude">
+      <Position>2</Position>
+      <DataType>double precision|0s</DataType>
+      <StateNumber>15634</StateNumber>
+      <TypeId>701</TypeId>
+    </column>
+    <column id="42" parent="16" name="longitude">
+      <Position>3</Position>
+      <DataType>double precision|0s</DataType>
+      <StateNumber>15634</StateNumber>
+      <TypeId>701</TypeId>
+    </column>
+    <column id="43" parent="16" name="name">
+      <Position>4</Position>
+      <DataType>varchar(255)|0s</DataType>
+      <StateNumber>15634</StateNumber>
+      <TypeId>1043</TypeId>
+    </column>
+    <index id="44" parent="16" name="sensor_pkey">
+      <ObjectId>16510</ObjectId>
+      <ColNames>id</ColNames>
+      <Unique>1</Unique>
+    </index>
+    <key id="45" parent="16" name="sensor_pkey">
+      <ObjectId>16511</ObjectId>
+      <ColNames>id</ColNames>
+      <UnderlyingIndexName>sensor_pkey</UnderlyingIndexName>
+      <Primary>1</Primary>
+    </key>
+  </database-model>
+</dataSource>
