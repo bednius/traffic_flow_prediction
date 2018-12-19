@@ -2,6 +2,7 @@ import time
 
 import numpy as np
 from keras.regularizers import l2
+from datetime import timedelta
 
 from tensorflow import keras
 import tensorflow as tf
@@ -12,12 +13,14 @@ def create_model(num_hidden_layers=3, dims_hidden_layers=None, optimizer=None, m
         metrics = ['mae']
     if dims_hidden_layers is None:
         dims_hidden_layers = [50, 100, 50]
+    if optimizer is None:
+        optimizer = keras.optimizers.RMSprop()
 
-    layers = np.empty(num_hidden_layers + 2)
-    layers[0] = keras.layers.Dense(input_dim, activation=tf.nn.relu, input_shape=(input_dim, 0))
-    layers[num_hidden_layers + 1] = keras.layers.Dense(1)
+    layers = []
+    layers.append(keras.layers.Dense(input_dim, activation=tf.nn.relu, input_shape=(input_dim,)))
     for i in range(num_hidden_layers):
-        layers[i + 1] = keras.layers.Dense(dims_hidden_layers[i], activation=tf.nn.relu, kernel_regularizer=l2(0.001))
+        layers.append(keras.layers.Dense(dims_hidden_layers[i], activation=tf.nn.relu, kernel_regularizer=l2(0.001)))
+    layers.append(keras.layers.Dense(1))
 
     model = keras.Sequential(layers)
 
@@ -45,7 +48,13 @@ def train_model(model, features, labels, patience=500, epochs=1000):
     print('Training Time: {}'.format(end - start))
     return model
 
+
 def save_model(model, startDate, endDate, sensorId):
-    #filename = '{}_{}.h5'.format(endDate + )
-    #keras.save
+    catalog = './uploads/'
+    filename = '{}_{}.h5'.format(sensorId, str(endDate + timedelta(minutes=15)))
+    model.save(catalog + filename)
     pass
+
+
+def load_model(path):
+    return keras.models.load_model(path)

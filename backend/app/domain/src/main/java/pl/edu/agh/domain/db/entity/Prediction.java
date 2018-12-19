@@ -18,17 +18,17 @@ import java.time.LocalDateTime;
 @DynamicInsert
 @Entity
 @Table(indexes = {
-        @Index(name = "prediction_sensor_object_index", columnList = "sensor_object_id", unique = false),
-        @Index(name = "prediction_datetime_index", columnList = "datetime", unique = false),
-        @Index(name = "prediction_sensor_object_datetime_unique_index", columnList = "sensor_object_id,datetime", unique = true)
+        @Index(name = "prediction_sensor_object_index", columnList = "s_sensor_object_id", unique = false),
+        @Index(name = "prediction_datetime_index", columnList = "s_datetime", unique = false),
+        @Index(name = "prediction_sensor_object_datetime_unique_index", columnList = "s_sensor_object_id,s_datetime", unique = true)
 })
 public class Prediction {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "datetime")
+    @Column(name = "s_datetime")
     private LocalDateTime dateTime;
 
     @Column(name = "avg_mph")
@@ -44,6 +44,6 @@ public class Prediction {
     private Integer minVolume;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "sensor_object_id")
+    @JoinColumn(name = "s_sensor_object_id")
     private Sensor sensor;
 }
