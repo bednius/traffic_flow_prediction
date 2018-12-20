@@ -52,7 +52,7 @@ public class PredictionsService implements PredictionsProvider<SensorDTO, ChartD
         sensors.forEach(sensor -> this.sensors.put(sensor.getId(), mapperToSensorDTO.mapToDTO(sensor)));
     }
 
-    @Scheduled(fixedRate = 24 * 60 * 1000)
+    @Scheduled(fixedRate = 24 * 60 * 1000, initialDelay = 5000)
     private void refreshSensorCache() {
         log.info("SENSOR CACHE - Started to refresh");
 
