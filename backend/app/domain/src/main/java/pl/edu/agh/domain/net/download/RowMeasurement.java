@@ -22,7 +22,6 @@ public class RowMeasurement {
     private String sensorName;
 
     @JsonProperty(value = "Report Date")
-//    @JsonFormat(pattern = "yyyy-MM-ddTHH:mm:ss")
     private String measurementDate;
 
     @JsonProperty(value = "Time Period Ending")
