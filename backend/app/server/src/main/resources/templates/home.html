@@ -27,7 +27,7 @@
     <style>
         #mapid {
             width: 100px;
-            height: 800px;
+            height: 1200px;
             min-height: 100%;
             min-width: 100%;
             display: block;
@@ -71,21 +71,12 @@
         <div id="mapid"></div>
     </div>
 </div>
-<!--<div id="chart-1" style="height: 300px"></div>-->
 <script th:inline="javascript">
 
         var mymap = L.map('mapid').setView([51.505, -0.09], 6);
             /*<![CDATA[*/
         var sensors = /*[[${sensors}]]*/
     /*]]>*/
-
-        // L.marker([51.5, -0.09]).addTo(mymap)
-        // .bindPopup('<div id="chart-1" style="height: 110px"></div>' + string);
-        // .openPopup();
-
-        L.marker([51.8, -0.09]).addTo(mymap)
-        .bindPopup('Hi')
-        .openPopup();
 
 
         L.tileLayer(
@@ -98,30 +89,16 @@
             }).addTo(mymap);
 
 
-        for (var i=0; i<sensors.length/6; i++) {
+        for (var i=0; i<sensors.length; i++) {
 
             var result_address = 'http://127.0.0.1:8080/results/' +sensors[i].name;
 
             var link = '<a href=' + result_address + '>' + result_address + '\<\/a\>';
             L.marker([sensors[i].latitude, sensors[i].longitude]).addTo(mymap)
                 .bindPopup(link)
-                .openPopup();
         }
 
-        L.marker([51.5, -0.09]).addTo(mymap);
 
-        L.circle([51.508, -0.11], {
-            color: 'red',
-            fillColor: '#f03',
-            fillOpacity: 0.5,
-            radius: 500
-        }).addTo(mymap);
-
-        L.polygon([
-            [51.509, -0.08],
-            [51.503, -0.06],
-            [51.51, -0.047]
-        ]).addTo(mymap);
         console.log(sensors.length)
     </script>
 </body>
