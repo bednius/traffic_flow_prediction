@@ -25,7 +25,8 @@ import java.time.LocalDateTime;
 public class Prediction {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @Column(name = "id", updatable = false)
     private Long id;
 
     @Column(name = "datetime")
