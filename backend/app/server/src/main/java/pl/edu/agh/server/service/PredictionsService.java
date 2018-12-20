@@ -4,18 +4,18 @@ import com.google.common.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.edu.agh.domain.db.entity.Sensor;
-import pl.edu.agh.domain.db.repository.PredictionRepository;
 import pl.edu.agh.domain.db.repository.SensorRepository;
 import pl.edu.agh.domain.net.SensorDTO;
 import pl.edu.agh.domain.net.chart.ChartData;
+import pl.edu.agh.domain.net.mapper.dto.MapperToDTO;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static com.google.common.cache.CacheBuilder.newBuilder;
 
@@ -28,34 +28,49 @@ public class PredictionsService implements PredictionsProvider<SensorDTO, ChartD
 
     private final SensorRepository sensorRepository;
     private final ChartDataExtractor<ChartData> chartDataExtractor;
-
+    private final MapperToDTO<Sensor, SensorDTO> mapperToSensorDTO;
 
     private Cache<Long, SensorDTO> sensors;
 
     @Autowired
-    public PredictionsService(SensorRepository sensorRepository, PredictionRepository predictionRepository, ChartDataExtractor<ChartData> chartDataExtractor) {
+    public PredictionsService(SensorRepository sensorRepository, ChartDataExtractor<ChartData> chartDataExtractor,
+                              MapperToDTO<Sensor, SensorDTO> mapperToSensorDTO) {
         this.sensorRepository = sensorRepository;
         this.chartDataExtractor = chartDataExtractor;
+        this.mapperToSensorDTO = mapperToSensorDTO;
     }
 
 
     @PostConstruct
-    public void initCache(){
+    public void initCache() {
         List<Sensor> sensors = sensorRepository.findSensorsWithPredictions();
 
         this.sensors = newBuilder()
                 .maximumSize(sensorCacheSize <= 0 ? sensorRepository.count() : sensorCacheSize)
                 .build();
 
-        for(Sensor sensor: sensors){
-                this.sensors.put(sensor.getId(),SensorDTO.builder()
-                        .latitude(sensor.getLatitude())
-                        .longitude(sensor.getLongitude())
-                        .name(sensor.getId().toString())
-                        .build()
-                );
-        }
+        sensors.forEach(sensor -> this.sensors.put(sensor.getId(), mapperToSensorDTO.mapToDTO(sensor)));
     }
+
+    @Scheduled(fixedRate = 24 * 60 * 1000)
+    private void refreshSensorCache() {
+        log.info("SENSOR CACHE - Started to refresh");
+
+        List<Sensor> sensorsWithPredictions = sensorRepository.findSensorsWithPredictions();
+        Map<Long, Sensor> mapSensor = sensorsWithPredictions.parallelStream().collect(Collectors.toMap(Sensor::getId, s -> s));
+
+        Set<Long> storedIdsSensors = this.sensors.asMap().keySet();
+        storedIdsSensors.forEach(s -> {
+            if (!mapSensor.containsKey(s)) {
+                this.sensors.invalidate(s);
+            } else {
+                this.sensors.put(s, mapperToSensorDTO.mapToDTO(mapSensor.get(s)));
+            }
+        });
+
+        log.info("SENSOR CACHE - FINISHED refreshing");
+    }
+
 
     @Override
     public List<ChartData> getPredictionsBySensorId(Long id) {
