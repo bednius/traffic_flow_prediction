@@ -1,100 +1,74 @@
 package pl.edu.agh.server.service;
 
 import com.google.common.cache.Cache;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import pl.edu.agh.domain.db.entity.Measurement;
 import pl.edu.agh.domain.db.entity.Sensor;
-import pl.edu.agh.domain.db.repository.MeasurementRepository;
+import pl.edu.agh.domain.db.repository.PredictionRepository;
 import pl.edu.agh.domain.db.repository.SensorRepository;
 import pl.edu.agh.domain.net.SensorDTO;
 import pl.edu.agh.domain.net.chart.ChartData;
 
 import javax.annotation.PostConstruct;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static com.google.common.cache.CacheBuilder.*;
+import static com.google.common.cache.CacheBuilder.newBuilder;
 
 @Service
+@Slf4j
 public class PredictionsService implements PredictionsProvider<SensorDTO, ChartData> {
 
     @Value("${pl.edu.agh.cache.sensors}")
     private Integer sensorCacheSize;
 
-    @Value("${pl.edu.agh.cache.predictions}")
-    private Integer predictionsCacheSize;
-
     private final SensorRepository sensorRepository;
-    private final MeasurementRepository measurementRepository;
+    private final ChartDataExtractor<ChartData> chartDataExtractor;
+
 
     private Cache<Long, SensorDTO> sensors;
 
     @Autowired
-    public PredictionsService(SensorRepository sensorRepository, MeasurementRepository measurementRepository) {
+    public PredictionsService(SensorRepository sensorRepository, PredictionRepository predictionRepository, ChartDataExtractor<ChartData> chartDataExtractor) {
         this.sensorRepository = sensorRepository;
-        this.measurementRepository = measurementRepository;
+        this.chartDataExtractor = chartDataExtractor;
     }
 
 
     @PostConstruct
     public void initCache(){
-        List<Sensor> sensors = sensorRepository.findAll();
+        List<Sensor> sensors = sensorRepository.findSensorsWithPredictions();
 
         this.sensors = newBuilder()
-                .maximumSize(sensorCacheSize <=0 ? sensors.size() : sensorCacheSize)
-                .expireAfterAccess(1,TimeUnit.HOURS)
+                .maximumSize(sensorCacheSize <= 0 ? sensorRepository.count() : sensorCacheSize)
                 .build();
 
         for(Sensor sensor: sensors){
-            if(sensor.getLatitude() != null && sensor.getLongitude() != null){
                 this.sensors.put(sensor.getId(),SensorDTO.builder()
                         .latitude(sensor.getLatitude())
                         .longitude(sensor.getLongitude())
                         .name(sensor.getId().toString())
                         .build()
                 );
-            }
         }
     }
 
     @Override
     public List<ChartData> getPredictionsBySensorId(Long id) {
-        LocalDateTime dateTime = LocalDateTime.of(2015,11,22,0,0,0);
-        LocalDateTime finishDateTime = LocalDateTime.of(2015,12,1,0,0,0);
-
-        List<Measurement> allBySensorId = measurementRepository.findAllBySensorIdByDateTimeAfer(id, dateTime, finishDateTime);
-        allBySensorId.parallelStream()
-                .forEach(m -> m.setDateTime(m.getDateTime().withYear(2018)));
-
-        Map<LocalDateTime, Integer> values =  allBySensorId.size() > 0 ?
-                allBySensorId.parallelStream()
-                        .collect(Collectors.toMap(m -> m.getDateTime(), m -> m.getTotalVolume()!= null ? m.getTotalVolume(): 0, (x1,x2) -> x1)):
-                Collections.emptyMap();
-
-        Map<LocalDateTime, Integer> velocity =  allBySensorId.size() > 0 ?
-                allBySensorId.parallelStream()
-                        .collect(Collectors.toMap(m -> m.getDateTime(), m -> m.getAvgMph()!= null ? m.getAvgMph(): 0, (x1,x2) -> x1)):
-                Collections.emptyMap();
-
-
-        ChartData volume = ChartData.builder().name("volume").values(values).build();
-        ChartData velocityChart = ChartData.builder().name("mph").values(velocity).build();
-
-        return Arrays.asList(volume, velocityChart);
+        return chartDataExtractor.extractChartData(id);
     }
+
 
     @Override
     public SensorDTO getSensorById(Long id) {
         try {
             return sensors.get(id, () -> sensorRepository.retrieveSensorAsDTO(id));
         } catch (ExecutionException e) {
-            e.printStackTrace();
+            log.warn(String.format("Failed to find sensor for sensor id = %d", id), e);
         }
         return null;
     }
@@ -102,8 +76,6 @@ public class PredictionsService implements PredictionsProvider<SensorDTO, ChartD
     @Override
     public List<SensorDTO> getAllSensor() {
         Collection<SensorDTO> values = sensors.asMap().values();
-        List<SensorDTO> sensorDTOS = new ArrayList<>(values);
-
-        return sensorDTOS.subList(555,4000);
+        return new ArrayList<>(values);
     }
 }
