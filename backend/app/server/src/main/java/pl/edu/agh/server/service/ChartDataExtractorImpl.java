@@ -61,7 +61,7 @@ public class ChartDataExtractorImpl implements ChartDataExtractor<ChartData> {
         try {
             return chartsPerSensor.get(sensorId, () -> getChartData(sensorId));
         } catch (ExecutionException e) {
-            log.error(String.format("Problem occured whilte trying to extract data for chart", sensorId), e);
+            log.error(String.format("Problem occurred while trying to extract data for chart with sensor %d", sensorId), e);
         }
         return Collections.emptyList();
     }
