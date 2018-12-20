@@ -3,6 +3,7 @@ package pl.edu.agh.server.service;
 import com.google.common.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.edu.agh.domain.db.entity.Sensor;
@@ -22,6 +23,8 @@ import static com.google.common.cache.CacheBuilder.newBuilder;
 @Slf4j
 public class PredictionsService implements PredictionsProvider<SensorDTO, ChartData> {
 
+    @Value("${pl.edu.agh.cache.sensors}")
+    private Integer sensorCacheSize;
 
     private final SensorRepository sensorRepository;
     private final ChartDataExtractor<ChartData> chartDataExtractor;
@@ -43,7 +46,7 @@ public class PredictionsService implements PredictionsProvider<SensorDTO, ChartD
         List<Sensor> sensors = sensorRepository.findSensorsWithPredictions();
 
         this.sensors = newBuilder()
-                .maximumSize(sensorRepository.count())
+                .maximumSize(sensorCacheSize <= 0 ? sensorRepository.count() : sensorCacheSize)
                 .build();
 
         sensors.forEach(sensor -> this.sensors.put(sensor.getId(), mapperToSensorDTO.mapToDTO(sensor)));
