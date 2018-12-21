@@ -8,13 +8,14 @@ from tensorflow import keras
 import tensorflow as tf
 
 
-def create_model(num_hidden_layers=3, dims_hidden_layers=None, optimizer=None, metrics=None, loss='mse', input_dim=5):
+def create_model(num_hidden_layers=3, dims_hidden_layers=None, optimizer=None, metrics=None, loss='mae', input_dim=5):
     if metrics is None:
-        metrics = ['mae']
+        metrics = ['mae', 'mse']
     if dims_hidden_layers is None:
         dims_hidden_layers = [50, 100, 50]
     if optimizer is None:
-        optimizer = keras.optimizers.RMSprop()
+        optimizer = 'adam'
+
 
     layers = []
     layers.append(keras.layers.Dense(input_dim, activation=tf.nn.relu, input_shape=(input_dim,)))
@@ -40,13 +41,13 @@ def train_model(model, features, labels, patience=500, epochs=1000):
     early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience)
 
     start = time.time()
-    print('Model training started')
+    #print('Model training started')
     history = model.fit(features, labels, epochs=epochs,
                         validation_split=0.2, verbose=0,
                         callbacks=[early_stop, print_progress()])
     end = time.time()
-    print('Training Time: {}'.format(end - start))
-    return model
+    #print('Training Time: {}'.format(end - start))
+    return model, history, float(end - start)
 
 
 def save_model(model, startDate, endDate, sensorId):

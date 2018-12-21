@@ -8,6 +8,9 @@ import operator
 import collections
 import matplotlib.pyplot as plt
 
+from nn_test import make_tests
+from utils import process_data
+
 begh = '00:14'
 endh = '23:59'
 datetime_pattern = '%Y-%m-%d %H:%M'
@@ -25,28 +28,13 @@ def accumulate_min_max(l):
     return [(f, min_d[f], max_d[f]) for f in a if f[1] % 15 == 14]
 
 
-def process_data(rows):
-    i = 0
-    features = np.zeros(shape=(len(rows), 5))
-    labels = np.empty(len(rows))
-    for row in rows:
-        # train_data[i][0] = row[3] # time
+def get_mins_max(l):
+    mins_max = accumulate_min_max(l)
+    mins_max.sort(key=lambda tup: tup[0])
 
-        features[i][0] = np.cos(row[1] * (2. * np.pi / 1440))
-        features[i][1] = np.sin(row[1] * (2. * np.pi / 1440))
-
-        features[i][2] = np.cos(row[0] * (2. * np.pi / 7))
-        features[i][3] = np.sin(row[0] * (2. * np.pi / 7))
-        # train_data[i][row[1] + 1] = 1
-        weekend = 0.0
-        if row[0] == 0 or row[0] == 6:
-            weekend = 1.0
-        elif row[0] == 5:
-            weekend = 0.1
-        features[i][4] = weekend
-        labels[i] = row[2]
-        i += 1
-    return features, labels
+    mins_maxx = [el for el in mins_max if el[0][0] != 0]
+    mins_maxx.extend([el for el in mins_max if el[0][0] == 0])
+    return mins_maxx
 
 
 def generate_test_rows():
@@ -103,39 +91,33 @@ if __name__ == '__main__':
 
     sensorIds = [15, 16]
 
-    print(str(start_datetime + timedelta(1)))
-
-    rows = load_data(15, str(start_datetime), str(end_datetime))
-
-    rows_tpl = [((x, y), z) for (x, y, z) in rows]
-
-    mins_max = accumulate_min_max(rows_tpl)
-
-    # with open('test.txt', 'w') as f:
-    #     for key, v1, v2 in mins_max:
-    #         f.write(str(key) + ' ' + str(v1) + ' ' + str(v2) + '\n')
-
-    mins_max.sort(key=lambda tup: tup[0])
-
-    mins_maxx = [el for el in mins_max if el[0][0] != 0]
-    mins_maxx.extend([el for el in mins_max if el[0][0] == 0])
-
-    print(len(mins_maxx))
-    print(mins_maxx)
-
 
     for sensorId in range(sensorIds[0], sensorIds[1]):
-        # model = nn_module.create_model()
-        # rows = load_data(sensorId, str(start_datetime), str(end_datetime))
-        # features, labels = process_data(rows)
-        # model = nn_module.train_model(model, features, labels, patience=100, epochs=500)
-        # nn_module.save_model(model, start_datetime, end_datetime, sensorId)
-        model = nn_module.load_model('./uploads/15_2016-11-21 23:59:00.h5')
+        # prepare data
+
+        make_tests()
+
+        rows = load_data(15, str(start_datetime), str(end_datetime))
+
+        rows_tpl = [((x, y), z) for (x, y, z) in rows]
+
+        mins_max = get_mins_max(rows_tpl)
+
+        ##
+
+
+
+        model = nn_module.create_model()
+        rows = load_data(sensorId, str(start_datetime), str(end_datetime))
+        features, labels = process_data(rows)
+        model = nn_module.train_model(model, features, labels, patience=100, epochs=500)
+        nn_module.save_model(model, start_datetime, end_datetime, sensorId)
+        #model = nn_module.load_model('./uploads/15_2016-11-21 23:59:00.h5')
         plot_prediction(model, sensorId, startTrainDate, endTrainDate, mins_maxx)
 
         test_rows = generate_test_rows()
         test_processed_data, _ = process_data(test_rows)
         predict_labels = model.predict(test_processed_data).flatten()
 
-        persist_predictions(sensorId, start_datetime, mins_maxx, predict_labels)
+        # persist_predictions(sensorId, start_datetime, mins_maxx, predict_labels)
 

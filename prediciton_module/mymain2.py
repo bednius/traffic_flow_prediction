@@ -191,7 +191,7 @@ def plot_history(history):
     plt.plot(history.epoch, np.array(history.history['val_mean_absolute_error']),
              label='Val loss')
     plt.legend()
-    # plt.ylim([0, 5])
+    plt.ylim([0, 5])
     plt.show()
 
 
@@ -223,6 +223,3 @@ plt.show()
 print("time: ", end - start)
 
 score = model.evaluate(test_data, test_labels)
-
-print('Test score:', score[0])
-print('Test accuracy:', score[1])
