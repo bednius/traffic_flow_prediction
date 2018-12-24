@@ -5,15 +5,19 @@ import psycopg2
 import time
 
 
-def connect(dbname='tfpv2', user='tfp', host='localhost', password='tfp'):
+def connect():
     global conn
+    global cur
+
+    with open('db.cfg', 'r') as dbcfg:
+        dbcreds = dbcfg.read()
+
     try:
-        conn = psycopg2.connect("dbname={} user={} host={} password={}".format(dbname, user, host, password))
+        conn = psycopg2.connect(dbcreds)
     except:
-        print("Cannot connect to database")
+        print("Unable to connect to database")
         exit(1)
 
-    global cur
     cur = conn.cursor()
     pass
 

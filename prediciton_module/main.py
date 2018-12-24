@@ -1,14 +1,11 @@
 import nn_module
 from datetime import datetime
-from datetime import timedelta
 from DBRepository import check_data_quality, connect, load_data, persist_predictions
 import numpy as np
-import itertools
-import operator
 import collections
 import matplotlib.pyplot as plt
+import sys
 
-from nn_test import make_tests
 from utils import process_data
 
 begh = '00:14'
@@ -74,50 +71,53 @@ def plot_prediction(model, sensorId, startDate, endDate, mins_max):
 
 
 if __name__ == '__main__':
-
-    # num_hidden_layers = 3
-    # dims_hidden_layers = [50, 100, 50]
-    # optimizer='rms',
-    # metrics,
-    # loss,
-    # input_dim
-
     connect()
-    startTrainDate = '2016-09-02'
-    endTrainDate = '2016-11-20'
+    # startTrainDate = '2016-09-02'
+    # endTrainDate = '2016-11-20'
+
+    # start_datetime = datetime.strptime(startTrainDate + ' ' + begh, datetime_pattern)
+    # end_datetime = datetime.strptime(endTrainDate + ' ' + endh, datetime_pattern)
+
+    # sensorIds = [15, 16]
+
+    if len(sys.argv) != 5:
+        print('Wrong number of arguments')
+        exit(1)
+
+    firstSensorId = int(sys.argv[1])
+    lastSensorId = int(sys.argv[2])
+    startTrainDate = sys.argv[3]
+    endTrainDate = sys.argv[4]
 
     start_datetime = datetime.strptime(startTrainDate + ' ' + begh, datetime_pattern)
     end_datetime = datetime.strptime(endTrainDate + ' ' + endh, datetime_pattern)
 
-    sensorIds = [15, 16]
+    if start_datetime >= end_datetime:
+        print('Wrond dates')
+        exit(1)
 
+    if firstSensorId < 0 or firstSensorId > 17000 or lastSensorId < 0 or lastSensorId > 17000 or firstSensorId > lastSensorId:
+        print('Wrond sensorIds interval')
+        exit(1)
 
-    for sensorId in range(sensorIds[0], sensorIds[1]):
-        # prepare data
+    for sensorId in range(firstSensorId, lastSensorId + 1):
 
-        make_tests()
+        if check_data_quality(sensorId, start_datetime, end_datetime) < 0.8:
+            print('Not enough data, sensorId: {}, dates: {} {}\n'.format(str(sensorId), str(start_datetime),
+                                                                         str(end_datetime)))
+        else:
+            rows = load_data(sensorId, str(start_datetime), str(end_datetime))
+            rows_tpl = [((x, y), z) for (x, y, z) in rows]
+            mins_maxx = get_mins_max(rows_tpl)
+            model = nn_module.create_model()
+            features, labels = process_data(rows)
+            model = nn_module.train_model(model, features, labels, patience=100, epochs=500)
+            nn_module.save_model(model, start_datetime, end_datetime, sensorId)
+            # model = nn_module.load_model('./uploads/15_2016-11-21 23:59:00.h5')
+            plot_prediction(model, sensorId, startTrainDate, endTrainDate, mins_maxx)
 
-        rows = load_data(15, str(start_datetime), str(end_datetime))
+            test_rows = generate_test_rows()
+            test_processed_data, _ = process_data(test_rows)
+            predict_labels = model.predict(test_processed_data).flatten()
 
-        rows_tpl = [((x, y), z) for (x, y, z) in rows]
-
-        mins_max = get_mins_max(rows_tpl)
-
-        ##
-
-
-
-        model = nn_module.create_model()
-        rows = load_data(sensorId, str(start_datetime), str(end_datetime))
-        features, labels = process_data(rows)
-        model = nn_module.train_model(model, features, labels, patience=100, epochs=500)
-        nn_module.save_model(model, start_datetime, end_datetime, sensorId)
-        #model = nn_module.load_model('./uploads/15_2016-11-21 23:59:00.h5')
-        plot_prediction(model, sensorId, startTrainDate, endTrainDate, mins_maxx)
-
-        test_rows = generate_test_rows()
-        test_processed_data, _ = process_data(test_rows)
-        predict_labels = model.predict(test_processed_data).flatten()
-
-        # persist_predictions(sensorId, start_datetime, mins_maxx, predict_labels)
-
+            persist_predictions(sensorId, start_datetime, mins_maxx, predict_labels)

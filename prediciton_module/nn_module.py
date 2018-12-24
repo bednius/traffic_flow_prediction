@@ -8,11 +8,11 @@ from tensorflow import keras
 import tensorflow as tf
 
 
-def create_model(num_hidden_layers=3, dims_hidden_layers=None, optimizer=None, metrics=None, loss='mae', input_dim=5):
+def create_model(num_hidden_layers=3, dims_hidden_layers=None, optimizer=None, metrics=None, loss='logcosh', input_dim=5):
     if metrics is None:
         metrics = ['mae', 'mse']
     if dims_hidden_layers is None:
-        dims_hidden_layers = [50, 100, 50]
+        dims_hidden_layers = [100, 200, 100]
     if optimizer is None:
         optimizer = 'adam'
 
@@ -32,7 +32,7 @@ def create_model(num_hidden_layers=3, dims_hidden_layers=None, optimizer=None, m
     return model
 
 
-def train_model(model, features, labels, patience=500, epochs=1000):
+def train_model(model, features, labels, patience=100, epochs=1000):
     class print_progress(keras.callbacks.Callback):
         def on_epoch_end(self, epoch, logs):
             if epoch % 100 == 0:
