@@ -59,6 +59,6 @@ Then run python script:
 ```python
    python3 <firstSensorId> <lastSensorId> <startDate> <endDate>
 ```
-Where sensordIds are values between 1 and 17000.
+Where sensorIds are values between 1 and 17000.
 Dates are in format YYYY-MM-DD, example: 2016-02-02.
-Ff necessary install required dependencies.
+If necessary install required dependencies.
