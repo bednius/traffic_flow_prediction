@@ -52,3 +52,13 @@ To run server locally type in "server" directory:
    java -jar target/server-1.0-SNAPSHOT.jar
 ```
 By default, application is run in http://localhost:8080 address.
+
+### Run prediction module
+Check if database config is proper(db.cfg).
+Then run python script:
+```python
+   python3 <firstSensorId> <lastSensorId> <startDate> <endDate>
+```
+Where sensordIds are values between 1 and 17000.
+Dates are in format YYYY-MM-DD, example: 2016-02-02.
+Ff necessary install required dependencies.
